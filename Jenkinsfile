@@ -1,8 +1,8 @@
-﻿pipeline {
+pipeline {
     agent any
     
     options {
-        timeout(time: 20, unit: 'MINUTES')
+        timeout(time: 30, unit: 'MINUTES')
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
     
@@ -10,19 +10,16 @@
         stage('🧹 Очистка') {
             steps {
                 cleanWs()
-                bat 'echo Рабочая директория очищена'
             }
         }
         
         stage('🐍 Установка зависимостей') {
             steps {
                 bat '''
-                    python --version
                     python -m venv venv
                     call venv\\Scripts\\activate
                     pip install --upgrade pip
                     pip install -r requirements.txt
-                    pip list
                 '''
             }
         }
@@ -31,7 +28,7 @@
             steps {
                 bat '''
                     call venv\\Scripts\\activate
-                    pytest test_shoporg_perfect.py --alluredir=allure-results --clean-alluredir -v --tb=short
+                    pytest test_shoporg_perfect.py --alluredir=allure-results --clean-alluredir -v
                 '''
             }
         }
@@ -49,13 +46,13 @@
     
     post {
         always {
-            archiveArtifacts artifacts: 'allure-results/**', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'screenshots/*.png', allowEmptyArchive: true
         }
         success {
-            echo '✅ Тест пройден успешно! Отчёт доступен во вкладке "Allure Report"'
+            echo '✅ Тест пройден успешно!'
         }
         failure {
-            echo '❌ Тест упал. Проверьте логи и скриншоты в отчёте.'
+            echo '❌ Тест упал'
         }
     }
 }
